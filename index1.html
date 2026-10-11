@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewpoint" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Traffic Optimization</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+
+<body>
+<div class="container">
+    <header>
+        <h1>Quantum Traffic Optimization</h1>
+        <p class="subtitles">
+            An educational qiskit experiment that explains how to split time between North-South and East-West 
+            at a four way intersection.
+        </p>
+    </header>
+    <section class="card">
+        <h2>1.Traffic Density</h2>
+        <p class="hint">Enter the number of vehicles waiting on each approach(0-500)</p>
+        <form method="post" action="{{ url_for('index') }}">
+            <div class="inputs">
+                {% for d in directions %}
+                <label class="field">
+                    <span>{{ d }}</span>
+                    <input type="number" name="{{ d }}" min="0" max="500" step="any" 
+                    value="{{ values[d] }}" placeholder="e.g. 12" required>
+                </label>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn"> Optimize Traffic</button>
+        </form>
+        {% if error %}
+            <p class="error">⚠ {{ error }}</p>
+        {% endif %}
+    </section>
+    <section class="card">
+        <h2>2. Intersection</h2>
+        <div class="intersection">
+            {% for key,name in [('north','North'),('west','West'), ('east','East'), ('south','South')] %}
+            {% set is_ns =key in ['north','south'] %}
+            <div class="approach {{ key }} {{ 'ns' if is_ns else 'ew' }}">
+                <span class="label">{{ name }}</span>
+                
+                <span class="count">{{ "%g"|format(result.densities[name]) if result else "-"}}</span>
+                {% if result %}
+                <span class="green"> Green {{ result.best.ns if is_ns else result.best.ew }}</span>
+                {% endif %}
+            </div
+            {% endfor %}
+            <div class="center">Fixed {{ cycle }} s cycle<br> Phase A  ↔ Phase B</div>
+        </div>
+    </section>
+
+    {% if result %}
+    <section class="card">
+        <h2>3. Traffic Density Comparison</h2>
+        <div class="bar-row">
+            <span>North–South demand</span>
+            <div class="bar"><div class="fill ns" style="width: {{ result.ns_share }}%"></div></div>
+            <b>{{ "%g"|format(result.ns_demand) }}</b>
+        </div>
+        <div class="bar-row">
+            <span>East–West demand</span>
+            <div class="bar"><div class="fill ew" style="width: {{ 100 - result.ns_share }}%"></div></div>
+            <b>{{ "%g"|format(result.ew_demand) }}</b>
+       </div>
+    </section>
+
+    <section class="card">
+        <h2>4. Recommended Phase Allocation</h2>
+        <div class="cycle">
+            <div class="phase phase-a" style="width: {{ result.best.ns / cycle * 100 }}%">
+                Phase A . N-S {{ result.best.ns }} s
+            </div>
+            <div class="phase phase-b" style="width: {{ result.best.ew / cycle * 100}}%">
+                Phase B . E-W {{ result.best.ew }} s
+            </div>
+        </div>
+        <p class="check">
+            {{ result.best.ns }} s + {{ result.best.ew }} s = {{ cycle }} s cycle.
+            Phases never overlap, so only one phase is green at a time.
+        </p>
+    </section>
+
+    <section class="card">
+        <h2> 5. Quantum Simulation Results </h2>
+        <div class="stats">
+            <div class="stat">
+                <span>Most frequent outcome</span>
+                <b><code>{{ result.top.bits }}</code></b>
+            </div>
+            <div class="stat">
+                <span>Times Observed</span>
+                <b>{{ result.ns_share }} / {{ result.shots }} ({{ result.top.pct }}%)</b>
+            </div>
+            <div class="stat">
+                <span>Circuit bias (NS share)</span>
+                <b>{{ result.ns_share }}%  . θ = {{ result.theta }} rad</b>
+            </div>
+            <div class="stat">
+                <span>Selected candidates</span>
+                <b>#{{ result.best.k }} → {{ result.best.ns }} / {{ result.best.ew }} s</b>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tbody>
+                    {% for r in result.rows %}
+                    <tr class="{{ 'chosen' if r.bits == result.best.bits else '' }}">
+                        <td><code>{{ r.bits }}</code></td>
+                        <td>{{ r.k }}</td>
+                        <td>{{ r.ns }} / {{ r.ew }}</td>
+                        <td>
+                            <div class="bar small"><div class="fill quantum" style="width: {{ r.width }}%"></div></div>
+                            {{ r.shots }} ({{ r.pct }}%)
+                        </td>
+                        <td>{{ r.score }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </thead>
+        </table>
+    </section>
+    
+
+    <section class="card">
+        <h2>6. Why This Allocation?</h2>
+        <p>{{ result.explanation }}</p>
+        <p class="check">
+            Exhaustive classical check of all 16 candidates:            {{ result.exhaustive[0] }} s N–S / {{ result.exhaustive[1] }} s E–W
+            ({{ "matches" if result.exhaustive[0] == result.best.ns else "differs from" }} the sampled choice).
+        </p>
+        <p class="note">
+            This is a simulated recommendation for learning. It is not connected to real traffic signals.
+        </p>
+    </section>
+    {% endif %}
+    <footer> Built with Qiskit,Flask and Qiskit AER</footer>
+</div>
+</body>
+</html>
