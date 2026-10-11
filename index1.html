@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewpoint" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quantum Traffic Optimization</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
@@ -48,7 +48,7 @@
                 {% if result %}
                 <span class="green"> Green {{ result.best.ns if is_ns else result.best.ew }}</span>
                 {% endif %}
-            </div
+            </div>
             {% endfor %}
             <div class="center">Fixed {{ cycle }} s cycle<br> Phase A  ↔ Phase B</div>
         </div>
@@ -94,7 +94,7 @@
             </div>
             <div class="stat">
                 <span>Times Observed</span>
-                <b>{{ result.ns_share }} / {{ result.shots }} ({{ result.top.pct }}%)</b>
+                <b>{{ result.top.shots }} / {{ result.shots }} ({{ result.top.pct }}%)</b>
             </div>
             <div class="stat">
                 <span>Circuit bias (NS share)</span>
@@ -107,21 +107,22 @@
         </div>
         <table>
             <thead>
-                <tbody>
-                    {% for r in result.rows %}
-                    <tr class="{{ 'chosen' if r.bits == result.best.bits else '' }}">
-                        <td><code>{{ r.bits }}</code></td>
-                        <td>{{ r.k }}</td>
-                        <td>{{ r.ns }} / {{ r.ew }}</td>
-                        <td>
-                            <div class="bar small"><div class="fill quantum" style="width: {{ r.width }}%"></div></div>
-                            {{ r.shots }} ({{ r.pct }}%)
-                        </td>
-                        <td>{{ r.score }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+                <tr><th>Outcome</th><th>Candidate</th><th>NS / EW green</th><th>Counts</th><th>Objective</th></tr>
             </thead>
+            <tbody>
+                {% for r in result.rows %}
+                <tr class="{{ 'chosen' if r.bits == result.best.bits else '' }}">
+                    <td><code>{{ r.bits }}</code></td>
+                    <td>{{ r.k }}</td>
+                    <td>{{ r.ns }} / {{ r.ew }}</td>
+                    <td>
+                        <div class="bar small"><div class="fill quantum" style="width: {{ r.width }}%"></div></div>
+                        {{ r.shots }} ({{ r.pct }}%)
+                    </td>
+                    <td>{{ r.score }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
         </table>
     </section>
     
